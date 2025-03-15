@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
 
+
   workflow_dispatch:
 
 jobs:
@@ -15,11 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Print sha
-        run: echo "$GITHUB_SHA"
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build --no-cache -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:$GITHUB_SHA .
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }} ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:latest
