@@ -58,7 +58,7 @@ jobs:
         id: extract-tag
         run: |
           # Extrae la primera etiqueta de la lista generada por docker/metadata-action
-          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | awk -F, '{print $1}')
+          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | awk -F, '{print $1}' | tr -d ' ')
           echo "First tag: $FIRST_TAG"
           echo "first_tag=$FIRST_TAG" >> $GITHUB_OUTPUT
 
