@@ -5,9 +5,10 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
-
   workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}
 
 jobs:
   build:
@@ -19,6 +20,10 @@ jobs:
       - name: Get Short GitHub SHA
         run: echo "GITHUB_SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
+      - name: Lint Dockerfile
+        run: |
+          docker run --rm -i hadolint/hadolint < Dockerfile
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -26,11 +31,13 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker image
+        env:
+          DOCKER_BUILDKIT: 1
         run: |
-          docker build --no-cache -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}:$GITHUB_SHORT_SHA .
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}:$GITHUB_SHORT_SHA ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}:latest
+          docker build --no-cache -t $DOCKER_IMAGE:$GITHUB_SHORT_SHA .
+          docker tag $DOCKER_IMAGE:$GITHUB_SHORT_SHA $DOCKER_IMAGE:latest
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}:$GITHUB_SHORT_SHA
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}:latest
+          docker push $DOCKER_IMAGE:$GITHUB_SHORT_SHA
+          docker push $DOCKER_IMAGE:latest
