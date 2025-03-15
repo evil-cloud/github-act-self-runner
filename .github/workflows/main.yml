@@ -9,7 +9,6 @@ on:
 
 env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}
-  TRIVY_HOST: "https://trivy.infraops.us"
 
 jobs:
   lint:
@@ -63,9 +62,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Trivy security scan
-        run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            aquasec/trivy:latest \
-            image --server $TRIVY_HOST ${{ steps.meta.outputs.tags }} --severity HIGH,CRITICAL --quiet
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ steps.meta.outputs.tags }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
