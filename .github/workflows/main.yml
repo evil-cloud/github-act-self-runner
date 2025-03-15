@@ -1,81 +1,69 @@
-name: ci-pipeline
+build-and-scan:
+  runs-on: ubuntu-latest
+  needs: [lint]
+  steps:
+    - uses: actions/checkout@v4
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
+    # Configura QEMU para soportar múltiples plataformas (opcional)
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
 
-env:
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}
+    # Configura Docker Buildx
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    # Genera metadatos y etiquetas para la imagen de Docker
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}
+        tags: |
+          type=sha
+          type=raw,value=latest
 
-      - name: Lint Dockerfile
-        run: docker run --rm -i hadolint/hadolint < Dockerfile
+    # Inicia sesión en Docker Hub
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  build-and-scan:
-    runs-on: ubuntu-latest
-    needs: [lint]
-    steps:
-      - uses: actions/checkout@v4
+    # Construye la imagen de Docker
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
 
-      # Configura QEMU para soportar múltiples plataformas (opcional)
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+    # Extrae la primera etiqueta de la lista generada por docker/metadata-action
+    - name: Extract first tag
+      id: extract-tag
+      run: |
+        # Extrae la primera etiqueta de la lista generada por docker/metadata-action
+        FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | awk -F, '{print $1}')
+        echo "First tag: $FIRST_TAG"
+        echo "first_tag=$FIRST_TAG" >> $GITHUB_OUTPUT
 
-      # Configura Docker Buildx
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    # Escanea la imagen con Trivy
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@0.28.0
+      with:
+        image-ref: ${{ steps.extract-tag.outputs.first_tag }}
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
 
-      # Genera metadatos y etiquetas para la imagen de Docker
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}
-          tags: |
-            type=sha
-            type=raw,value=latest
-
-      # Inicia sesión en Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # Construye la imagen de Docker
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      # Escanea la imagen con Trivy
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ${{ steps.meta.outputs.tags }}
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-
-      # Sube la imagen a Docker Hub (opcional, si el escaneo es exitoso)
-      - name: Push Docker image
-        if: success()
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    # Sube la imagen a Docker Hub (opcional, si el escaneo es exitoso)
+    - name: Push Docker image
+      if: success()
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
