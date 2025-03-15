@@ -28,7 +28,7 @@ Instrumentator().instrument(app).expose(app)
 @app.get("/")
 async def always_ok():
     log_json("info", "devops", "Service full operated.", 200)
-    return {"message": "Hello from devops service"}
+    return {"message": "Hello from devops service v1.0.0"}
 
 @app.get("/health")
 async def health_check():
