@@ -65,4 +65,7 @@ jobs:
 
       - name: Run Trivy security scan
         run: |
-          trivy image --server $TRIVY_HOST ${{ steps.meta.outputs.tags }} --severity HIGH,CRITICAL --quiet
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest \
+            image --server $TRIVY_HOST ${{ steps.meta.outputs.tags }} --severity HIGH,CRITICAL --quiet
