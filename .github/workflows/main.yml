@@ -16,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get Short GitHub SHA
+        run: echo "GITHUB_SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -24,5 +27,5 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --no-cache -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:$GITHUB_SHA .
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }} ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:latest
+          docker build --no-cache -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:$SHORT_GITHUB_SHA .
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:$SHORT_GITHUB_SHA ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:latest
