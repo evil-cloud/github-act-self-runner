@@ -27,5 +27,5 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --no-cache -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:$SHORT_GITHUB_SHA .
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:$SHORT_GITHUB_SHA ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.IMAGE_NAME }}:latest
+          docker build --no-cache -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}:$SHORT_GITHUB_SHA .
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}:$SHORT_GITHUB_SHA ${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.IMAGE_NAME }}:latest
