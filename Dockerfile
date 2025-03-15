@@ -5,7 +5,7 @@ WORKDIR /app
 RUN groupadd -g 3000 app && \
     useradd -m -u 10001 -g 3000 --no-log-init app
 
-RUN pip install --upgrade setuptools>=70.0.0
+RUN pip install --no-cache-dir --upgrade setuptools==70.0.0
 
 COPY requirements.txt .
 

@@ -1,5 +1,5 @@
-fastapi
-uvicorn
-prometheus-fastapi-instrumentator
-prometheus-client
-setuptools>=70.0.0
+fastapi==0.115.11
+uvicorn==0.34.0
+prometheus-fastapi-instrumentator==7.0.2
+prometheus-client==0.21.1
+setuptools==76.0.0
