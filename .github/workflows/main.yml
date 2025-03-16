@@ -57,6 +57,11 @@ jobs:
           cache-to: type=gha,mode=max
 
 
+      - name: Verify setuptools version
+        run: |
+          docker run --rm ${{ env.IMAGE_NAME }}:latest pip show setuptools
+
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
         with:
