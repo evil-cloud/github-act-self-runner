@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster AS builder
+FROM python:3.9-slim AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-FROM python:3.9-slim-buster
+FROM python:3.9-slim
 
 WORKDIR /app
 
