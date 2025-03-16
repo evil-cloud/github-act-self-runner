@@ -57,9 +57,6 @@ jobs:
           cache-to: type=gha,mode=max
 
 
-      - name: List Dockers
-        run: docker images
-
       - name: Push Docker image
         uses: docker/build-push-action@v5
         with:
