@@ -22,8 +22,8 @@ def log_json(level, component, message, status_code=None):
 
 app = FastAPI()
 
-# Instrumentar Prometheus
-Instrumentator().instrument(app).expose(app)
+instrumentator = Instrumentator().instrument(app)
+instrumentator.expose(app, endpoint="/metrics")
 
 @app.get("/")
 async def always_ok():
