@@ -1,3 +1,4 @@
+# v1.0.0
 FROM python:3.9-slim AS builder
 
 WORKDIR /app
